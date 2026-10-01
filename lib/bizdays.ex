@@ -1,6 +1,16 @@
 defmodule Bizdays do
   @moduledoc """
   Business day calculations for the Brazilian financial market.
+
+  Use `anbima/0` for the built-in 2001–2099 calendar, or `Bizdays.Calendar.new/1`
+  for a custom calendar. All calendar operations take the calendar first.
+
+  `count/3` excludes the starting date and includes the ending date; `range/3`
+  includes both endpoints when they are business days. `add/3` accepts signed
+  integer offsets and adjusts forward when the offset is zero.
+
+  Dates must use `Elixir.Calendar.ISO` and fall within the calendar's inclusive bounds.
+  Invalid dates and operations that exceed those bounds raise `ArgumentError`.
   """
 
   alias Bizdays.ANBIMA
