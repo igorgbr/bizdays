@@ -157,6 +157,115 @@ defmodule Bizdays do
     end
   end
 
+  @doc """
+  Applies `following/2`, switching to `preceding/2` if the result changes month.
+
+  Business dates remain unchanged. Each search must succeed within the
+  calendar boundaries; an out-of-bounds search raises `ArgumentError`
+  rather than triggering the opposite adjustment. The fallback can itself
+  leave the original month if that month has no business days.
+
+  ## Examples
+
+      iex> Bizdays.modified_following(Bizdays.anbima(), ~D[2026-01-31])
+      ~D[2026-01-30]
+  """
+  @spec modified_following(Calendar.t(), Date.t()) :: Date.t()
+  def modified_following(%Calendar{} = calendar, date) do
+    adjusted = following(calendar, date)
+
+    if {adjusted.year, adjusted.month} == {date.year, date.month} do
+      adjusted
+    else
+      preceding(calendar, date)
+    end
+  end
+
+  @doc """
+  Applies `preceding/2`, switching to `following/2` if the result changes month.
+
+  Business dates remain unchanged. Each search must succeed within the
+  calendar boundaries; an out-of-bounds search raises `ArgumentError`
+  rather than triggering the opposite adjustment. The fallback can itself
+  leave the original month if that month has no business days.
+
+  ## Examples
+
+      iex> Bizdays.modified_preceding(Bizdays.anbima(), ~D[2026-03-01])
+      ~D[2026-03-02]
+  """
+  @spec modified_preceding(Calendar.t(), Date.t()) :: Date.t()
+  def modified_preceding(%Calendar{} = calendar, date) do
+    adjusted = preceding(calendar, date)
+
+    if {adjusted.year, adjusted.month} == {date.year, date.month} do
+      adjusted
+    else
+      following(calendar, date)
+    end
+  end
+
+  @doc """
+  Lists business days from `from` to `to`, including both endpoints if they are business days.
+
+  The result follows the input direction: reversed endpoints produce a
+  descending list. Equal endpoints return a singleton for a business day,
+  or an empty list otherwise. Unlike `count/3`, the start is included.
+
+  Raises `ArgumentError` for invalid or out-of-bounds dates.
+
+  ## Examples
+
+      iex> Bizdays.range(Bizdays.anbima(), ~D[2026-02-13], ~D[2026-02-19])
+      [~D[2026-02-13], ~D[2026-02-18], ~D[2026-02-19]]
+
+      iex> Bizdays.range(Bizdays.anbima(), ~D[2026-02-19], ~D[2026-02-13])
+      [~D[2026-02-19], ~D[2026-02-18], ~D[2026-02-13]]
+  """
+  @spec range(Calendar.t(), Date.t(), Date.t()) :: [Date.t()]
+  def range(%Calendar{} = calendar, from, to) do
+    validate_date!(calendar, from)
+    validate_date!(calendar, to)
+    step = if Date.compare(from, to) == :gt, do: -1, else: 1
+
+    from
+    |> Date.range(to, step)
+    |> Enum.filter(&business_day_unchecked?(calendar, &1))
+  end
+
+  @doc """
+  Lists the calendar's holidays in `year`, in chronological order.
+
+  Includes holidays on weekends, but does not add ordinary weekend days.
+  For a calendar covering only part of a year, returns holidays within its
+  available boundaries. An empty year returns `[]`.
+
+  Raises `ArgumentError` unless the year is an integer overlapping the
+  calendar's supported interval.
+
+  ## Examples
+
+      iex> Bizdays.holidays(Bizdays.anbima(), 2026) |> Enum.take(3)
+      [~D[2026-01-01], ~D[2026-02-16], ~D[2026-02-17]]
+
+      iex> Bizdays.holidays(Bizdays.Calendar.new(), 2026)
+      []
+  """
+  @spec holidays(Calendar.t(), integer()) :: [Date.t()]
+  def holidays(%Calendar{} = calendar, year) when is_integer(year) do
+    if year < calendar.first_date.year or year > calendar.last_date.year do
+      raise ArgumentError, "year #{year} is outside the calendar boundaries"
+    end
+
+    calendar.holidays
+    |> Enum.filter(&(&1.year == year))
+    |> Enum.sort(Date)
+  end
+
+  def holidays(%Calendar{}, year) do
+    raise ArgumentError, "expected an integer year, got: #{inspect(year)}"
+  end
+
   defp count_forward(calendar, from, to) do
     days = Date.diff(to, from)
     full_weeks = div(days, 7) * (7 - length(calendar.weekend))
