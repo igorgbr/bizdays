@@ -8,18 +8,17 @@ once at compile time. The library has zero runtime dependencies.
 
 ## Installation
 
-Requires Elixir 1.15 or later. Until the first Hex release, use the Git repository:
+Requires Elixir 1.15 or later. Add `bizdays` to your dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:bizdays, git: "https://github.com/igorgbr/bizdays.git"}
+    {:bizdays, "~> 0.1"}
   ]
 end
 ```
 
-Run `mix deps.get`. Your application's `mix.lock` records the selected Git commit.
-
+Then run `mix deps.get`.
 ## Quick start
 
 ```elixir
