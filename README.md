@@ -1,5 +1,10 @@
 # Bizdays
 
+[![CI](https://github.com/igorgbr/bizdays/actions/workflows/ci.yml/badge.svg)](https://github.com/igorgbr/bizdays/actions/workflows/ci.yml)
+[![Hex.pm](https://img.shields.io/hexpm/v/bizdays.svg)](https://hex.pm/packages/bizdays)
+[![Docs](https://img.shields.io/badge/hex-docs-purple.svg)](https://hexdocs.pm/bizdays)
+[![License](https://img.shields.io/hexpm/l/bizdays.svg)](https://github.com/igorgbr/bizdays/blob/main/LICENSE)
+
 Business day calculations in Elixir, with the Brazilian ANBIMA calendar for
 2001–2099 and support for custom calendars.
 
